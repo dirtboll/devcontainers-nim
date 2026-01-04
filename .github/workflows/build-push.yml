@@ -23,6 +23,9 @@ jobs:
     permissions: 
       contents: read
       packages: write
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
     steps:
     - name: Init script
       id: init
@@ -53,6 +56,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         push: true
+        platform: ${{ matrix.platform }}
         tags: ${{ steps.init.outputs.tag }}
         build-args: |
           BASE_IMAGE=${{ steps.init.outputs.base_image }}
