@@ -8,6 +8,8 @@ RUN apt update && apt install -y build-essential curl                           
     cd /opt/Nim                                                                    && \
     curl -fsSLo nim.tar.gz https://nim-lang.org/download/nim-$NIM_VERSION.tar.xz   && \
     tar -xvf nim.tar.gz --strip-components 1                                       && \
-    sh build_all.sh
+    sh build.sh                                                                    && \
+    bin/nim c koch                                                                 && \
+    ./koch boot -d:release                                                         && \
+    ./koch tools
 ENV PATH=$PATH:/opt/Nim/bin
-RUN nimble install nimlangserver
