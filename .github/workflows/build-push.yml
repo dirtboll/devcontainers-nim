@@ -4,16 +4,18 @@ on:
     - feat/ci
   workflow_dispatch:
     inputs:
-      nim_version:
-        type: string
-        default: 2.2.6
-        required: false
-        description: The version of Nim to be installed
       base_image:
         type: string
-        default: mcr.microsoft.com/devcontainers/base:noble
         required: false
         description: Base image to use for devcontainer
+      nim_version:
+        type: string
+        required: false
+        description: The version of Nim to be installed
+
+env:
+  DEFAULT_BASE_IMAGE: mcr.microsoft.com/devcontainers/base:noble
+  DEFAULT_NIM_VERSION: 2.2.6
 
 jobs:
   build-push:
@@ -25,12 +27,12 @@ jobs:
     - name: Init script
       id: init
       run: |
-        base_tag=$(echo ${{ inputs.base_image }} | cut -d ':' -f2)
+        base_tag=$(echo ${{ inputs.base_image || env.DEFAULT_BASE_IMAGE }} | cut -d ':' -f2)
         if [[ -z "$base_tag" ]]; then
           echo "Can't get base image tag" >&2
           exit 1
         fi
-        echo "tag=ghcr.io/${{ github.repository }}:${{ inputs.nim_version }}-$base_tag" >> $GITHUB_OUTPUT 
+        echo "tag=ghcr.io/${{ github.repository }}:${{ inputs.nim_version || env.DEFAULT_NIM_VERSION }}-$base_tag" >> $GITHUB_OUTPUT 
     - name: Checkout
       uses: actions/checkout@v6
     - name: Set up QEMU
