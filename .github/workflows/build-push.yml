@@ -1,0 +1,54 @@
+on:
+  push:
+    branches:
+    - feat/ci
+  workflow_dispatch:
+    inputs:
+      nim_version:
+        type: string
+        default: 2.2.6
+        required: false
+        description: The version of Nim to be installed
+      base_image:
+        type: string
+        default: mcr.microsoft.com/devcontainers/base:noble
+        required: false
+        description: Base image to use for devcontainer
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions: 
+      contents: read
+      packages: write
+    steps:
+    - name: Init script
+      id: init
+      run: |
+        base_tag=$(echo ${{ inputs.base_image }} | cut -d ':' -f2)
+        if [[ -z "$base_tag" ]]; then
+          echo "Can't get base image tag" >&2
+          exit 1
+        fi
+        echo "tag=ghcr.io/${{ github.repository }}:${{ inputs.nim_version }}-$base_tag" >> $GITHUB_OUTPUT 
+    - name: Checkout
+      uses: actions/checkout@v6
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and Push
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        tags: ${{ steps.init.outputs.tag }}
+        build-args: |
+          BASE_IMAGE=${{ inputs.base_image }}
+          NIM_VERSION=${{ inputs.nim_version }}
+      
