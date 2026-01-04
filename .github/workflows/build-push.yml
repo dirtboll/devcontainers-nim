@@ -27,12 +27,16 @@ jobs:
     - name: Init script
       id: init
       run: |
-        base_tag=$(echo ${{ inputs.base_image || env.DEFAULT_BASE_IMAGE }} | cut -d ':' -f2)
+        base_image="${{ inputs.base_image || env.DEFAULT_BASE_IMAGE }}"
+        nim_version="${{ inputs.nim_version || env.DEFAULT_NIM_VERSION }}"
+        base_tag=$(echo $base_image | cut -d ':' -f2)
         if [[ -z "$base_tag" ]]; then
           echo "Can't get base image tag" >&2
           exit 1
         fi
-        echo "tag=ghcr.io/${{ github.repository }}:${{ inputs.nim_version || env.DEFAULT_NIM_VERSION }}-$base_tag" >> $GITHUB_OUTPUT 
+        echo "base_image=$base_image"                                      >> $GITHUB_OUTPUT
+        echo "nim_version=$nim_version"                                    >> $GITHUB_OUTPUT
+        echo "tag=ghcr.io/${{ github.repository }}:$nim_version-$base_tag" >> $GITHUB_OUTPUT 
     - name: Checkout
       uses: actions/checkout@v6
     - name: Set up QEMU
@@ -51,6 +55,6 @@ jobs:
         push: true
         tags: ${{ steps.init.outputs.tag }}
         build-args: |
-          BASE_IMAGE=${{ inputs.base_image }}
-          NIM_VERSION=${{ inputs.nim_version }}
+          BASE_IMAGE=${{ steps.init.outputs.base_image }}
+          NIM_VERSION=${{ steps.init.outputs.nim_version }}
       
